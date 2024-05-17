@@ -1,0 +1,113 @@
+#include <Servo.h>
+
+Servo servo1;
+Servo servo2;
+Servo servo3;
+
+const int buttonPin = D3; // D3 pin on NodeMCU (GPIO 0)
+int buttonState = 0;    // Variable for reading the button status
+int lastButtonState = 0;
+int counter = 0;        // Counter for button presses
+
+
+void smoothMove(Servo &servo, int startPos, int endPos, int duration) {
+  int steps = 100; // Number of steps to move
+  int stepDelay = duration / steps; // Delay between steps
+  int stepSize = (endPos - startPos) / steps; // Step size
+
+  for (int i = 0; i <= steps; i++) {
+    int pos = startPos + i * stepSize;
+    servo.write(pos);
+    delay(stepDelay);
+  }
+}
+
+
+void setup() {
+  Serial.begin(115200);   // Initialize serial communication at 115200 baud rate
+
+  servo1.attach(D4, 500, 2500); // D4 pin on NodeMCU (GPIO 2)
+  servo2.attach(D5, 500, 2500); // D5 pin on NodeMCU (GPIO 14)
+  servo3.attach(D7, 500, 2500); // D6 pin on NodeMCU (GPIO 12)
+
+  pinMode(buttonPin, INPUT_PULLUP); // Use internal pull-up resistor
+
+  servo1.write(0); // Start at 0 degrees
+  servo2.write(0); // Start at 0 degrees
+  servo3.write(0); // Start at 0 degrees
+
+  smoothMove(servo1, servo1.read(), 0, 2500); // Reset servo 1 to 0 degrees over 5 seconds
+  smoothMove(servo2, servo2.read(), 0, 2500); // Reset servo 2 to 0 degrees over 5 seconds
+  smoothMove(servo3, servo2.read(), 0, 2500);
+
+  delay(2000); // Wait for 2 seconds
+}
+
+
+void loop() {
+  int reading = digitalRead(buttonPin);
+
+  // Check if the button is pressed (LOW because of pull-up resistor)
+  if (reading == LOW && lastButtonState == HIGH) {
+    delay(50); // Debounce delay
+    if (digitalRead(buttonPin) == LOW) { // Confirm the button is still pressed
+      counter++; // Increment the counter
+
+      Serial.print("Counter: ");
+      Serial.println(counter);
+
+      if (counter == 1) {
+        servo1.write(60); // Servo 1 moves to 60 degrees
+        delay(500);
+        servo3.write(180); // Servo 3 moves to 180 degrees after 500ms
+      } else if (counter == 2) {
+        servo3.write(0); // Servo 3 moves back to 0 degrees
+      } else if (counter == 3) {
+        servo1.write(120); // Servo 1 moves to 120 degrees
+        delay(500);
+        servo3.write(180); // Servo 3 moves to 180 degrees after 500ms
+      } else if (counter == 4) {
+        servo3.write(0); // Servo 3 moves back to 0 degrees
+      } else if (counter == 5) {
+        servo1.write(180); // Servo 1 moves to 180 degrees
+        delay(500);
+        servo3.write(180); // Servo 3 moves to 180 degrees after 500ms
+      } else if (counter == 6) {
+        servo3.write(0); // Servo 3 moves back to 0 degrees
+      } else if (counter == 7) {
+        servo2.write(60); // Servo 2 moves to 60 degrees
+        delay(500);
+        servo3.write(180); // Servo 3 moves to 180 degrees after 500ms
+      } else if (counter == 8) {
+        servo3.write(0); // Servo 3 moves back to 0 degrees
+      } else if (counter == 9) {
+        servo2.write(120); // Servo 2 moves to 120 degrees
+        delay(500);
+        servo3.write(180); // Servo 3 moves to 180 degrees after 500ms
+      } else if (counter == 10) {
+        servo3.write(0); // Servo 3 moves back to 0 degrees
+      } else if (counter == 11) {
+        servo2.write(180); // Servo 2 moves to 180 degrees
+        delay(500);
+        servo3.write(180); // Servo 3 moves to 180 degrees after 500ms
+      } else if (counter == 12) {
+        servo3.write(0); // Servo 3 moves back to 0 degrees
+      } else if (counter == 13) {
+        // servo1.write(0); // Reset servo 1 to 0 degrees
+        // servo2.write(0); // Reset servo 2 to 0 degrees
+        // servo3.write(0); // Reset servo 3 to 0 degrees
+
+        smoothMove(servo1, servo1.read(), 0, 2500); // Reset servo 1 to 0 degrees over 5 seconds
+        smoothMove(servo2, servo2.read(), 0, 2500); // Reset servo 2 to 0 degrees over 5 seconds
+        smoothMove(servo3, 0, 0, 5000);
+
+        counter = 0; // Reset the counter
+      }
+
+      delay(1000); // Allow time for servo to move to new position
+    }
+  }
+
+  lastButtonState = reading; // Save the reading for the next loop
+}
+
